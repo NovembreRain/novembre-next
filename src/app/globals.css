@@ -1,26 +1,192 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* BACKGROUNDS */
+  --background: #0D0D1A;
+  --surface: #151525;
+  --surface-highlight: #1E1E30;
+
+  /* BRAND COLORS */
+  --primary: #7B2CBF;
+  /* Deep Vivid Purple */
+  --primary-glow: #9D4EDD;
+  --secondary: #E0AAFF;
+
+  /* SEMANTIC COLORS */
+  --success: #4ADE80;
+  --warning: #FACC15;
+  --danger: #F87171;
+
+  /* TEXT */
+  --foreground: #E8E0F0;
+  --muted: #94A3B8;
 }
 
-@theme inline {
+/* THEME CONFIGURATION 
+   In Tailwind v4, we map variables to utilities here 
+*/
+@theme {
   --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-surface: var(--surface);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
+  background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2D0A3E;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Storm Background (Legacy Support) */
+.storm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(ellipse at 20% 80%, rgba(75, 14, 107, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(123, 44, 191, 0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(45, 10, 62, 0.8) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+  animation: stormPulse 8s ease-in-out infinite;
+}
+
+@keyframes stormPulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.lightning {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  background: radial-gradient(ellipse at 30% 10%, rgba(240, 230, 255, 0.9) 0%, transparent 40%),
+    radial-gradient(ellipse at 70% 5%, rgba(199, 125, 255, 0.6) 0%, transparent 30%),
+    radial-gradient(ellipse at 50% 0%, rgba(224, 170, 255, 0.4) 0%, transparent 50%);
+  animation: lightningFlash 12s infinite;
+}
+
+.lightning.flash {
+  animation: lightningFlash 0.5s ease-out;
+  opacity: 1;
+}
+
+@keyframes lightningFlash {
+
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  2% {
+    opacity: 0;
+  }
+
+  2.5% {
+    opacity: 1;
+  }
+
+  3% {
+    opacity: 0.2;
+  }
+
+  3.5% {
+    opacity: 0.9;
+  }
+
+  4% {
+    opacity: 0;
+  }
+
+  4.5% {
+    opacity: 0.7;
+  }
+
+  5% {
+    opacity: 0;
+  }
+
+  45% {
+    opacity: 0;
+  }
+
+  45.5% {
+    opacity: 0.8;
+  }
+
+  46% {
+    opacity: 0;
+  }
+
+  46.5% {
+    opacity: 1;
+  }
+
+  47% {
+    opacity: 0.3;
+  }
+
+  47.5% {
+    opacity: 0;
+  }
+
+  75% {
+    opacity: 0;
+  }
+
+  75.3% {
+    opacity: 0.6;
+  }
+
+  75.6% {
+    opacity: 0;
+  }
+
+  76% {
+    opacity: 0.9;
+  }
+
+  76.5% {
+    opacity: 0.2;
+  }
+
+  77% {
+    opacity: 0;
+  }
 }
