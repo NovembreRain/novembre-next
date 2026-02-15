@@ -378,14 +378,14 @@ export default function PreCallIntelForm() {
                 </div>
 
                 <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight tracking-tight">
-                    Let's build your<br />
+                    Hello <br />
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E0AAFF] to-[#7B2CBF]">
-                        Digital Flagship.
+                        {data.brandName || "Visionary"}
                     </span>
                 </h1>
 
                 <p className="text-gray-400 text-lg md:text-xl font-light max-w-2xl mx-auto leading-relaxed mb-10">
-                    I need to understand the soul of your café. This brief extracts the strategy, not just the content.
+                    We're Novembre. A decade of building high-converting digital systems across industries. Before we connect, help us understand you better.
                 </p>
             </FadeIn>
 
