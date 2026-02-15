@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { createClient } from "@/utils/supabase/client";
 import {
-    ArrowRight, Check, ChevronDown, Calendar, Clock, Lock,
-    Leaf, TrendingUp, Zap, Crown, Building2, Play, Pause,
-    Globe, LayoutTemplate, MessageSquare, CreditCard, Bot,
-    FileText, Search, Wrench, ShieldCheck, Mail, Loader2, Sparkles, Phone, Monitor
+    ArrowRight, Check, ChevronDown, Clock,
+    Leaf, TrendingUp, Zap, Crown, Building2,
+    LayoutTemplate, ShieldCheck, CreditCard, Bot,
+    FileText, Wrench, Loader2, Sparkles
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -61,11 +60,13 @@ const STAGES = [
 ];
 
 const DESIGN_DIRECTIONS = [
-    { id: "bold_immersive", title: "Bold & Immersive", desc: "High-impact visuals with narrative depth", video: "/videos/bold-preview.mp4" },
-    { id: "minimal_elegant", title: "Minimal & Elegant", desc: "Clean lines, sophisticated typography", video: "/videos/minimal-preview.mp4" },
-    { id: "playful_dynamic", title: "Playful & Dynamic", desc: "Bright colors, motion, and interaction", video: "/videos/playful-preview.mp4" },
-    { id: "tech_futuristic", title: "Tech & Futuristic", desc: "Dark mode, neon accents, grid layouts", video: "/videos/tech-preview.mp4" },
-    { id: "editorial_luxury", title: "Editorial Luxury", desc: "High-fashion magazine layout style", video: "/videos/editorial-preview.mp4" },
+    { id: "img1", src: "/1.png", title: "Minimal & Clean" },
+    { id: "img2", src: "/2.png", title: "Bold Typography" },
+    { id: "img3", src: "/3.png", title: "Warm & Earthy" },
+    { id: "img4", src: "/4.png", title: "Dark & Moody" },
+    { id: "img5", src: "/5.png", title: "Editorial Style" },
+    { id: "img6", src: "/6.png", title: "Vibrant & Pop" },
+    { id: "img7", src: "/7.png", title: "Tech / Futuristic" },
 ];
 
 const STACKS = [
@@ -146,44 +147,30 @@ const InputField = ({ label, ...props }: any) => (
     </div>
 );
 
-const VideoCard = ({ item, selected, onClick }: any) => {
-    const videoRef = useRef<HTMLVideoElement>(null);
-
+const ImageCard = ({ item, selected, onClick }: any) => {
     return (
         <div
             onClick={onClick}
-            onMouseEnter={() => videoRef.current?.play()}
-            onMouseLeave={() => { videoRef.current?.pause(); if (videoRef.current) videoRef.current.currentTime = 0; }}
-            className={`relative rounded-xl overflow-hidden cursor-pointer aspect-[4/5] group border transition-all duration-300 ${selected ? 'border-[#7B2CBF] ring-2 ring-[#7B2CBF]/30 scale-[1.02]' : 'border-white/10 hover:border-white/30'}`}
+            className={`relative rounded-xl overflow-hidden cursor-pointer group break-inside-avoid mb-4 transition-all duration-300 ${selected ? 'ring-4 ring-[#7B2CBF] shadow-[0_0_30px_rgba(123,44,191,0.4)] scale-[1.02]' : 'hover:opacity-90'}`}
         >
-            <div className="absolute inset-0 bg-[#151525]">
-                <div className="w-full h-full bg-gradient-to-br from-white/5 to-white/0 flex items-center justify-center">
-                    <Play className={`w-12 h-12 text-white/10 ${selected ? 'text-[#7B2CBF]' : ''}`} />
-                </div>
-                {/* 
-                  NOTE: Ensure these video paths exist in public/videos or use placeholders.
-                  If not, this will just show the poster/placeholder.
-                */}
-                <video
-                    ref={videoRef}
-                    src={item.video}
-                    loop
-                    muted
-                    playsInline
-                    className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity"
+            <div className={`relative aspect-[3/4] md:aspect-auto`}>
+                <img
+                    src={item.src}
+                    alt={item.title}
+                    className="w-full h-auto object-cover rounded-xl"
+                    loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                <div className={`absolute inset-0 bg-black/40 transition-opacity duration-300 ${selected ? 'opacity-20' : 'opacity-0 group-hover:opacity-20'}`} />
             </div>
 
-            <div className="absolute top-3 right-3">
-                <div className={`w-6 h-6 rounded-full border flex items-center justify-center transition-colors ${selected ? 'bg-[#7B2CBF] border-[#7B2CBF]' : 'border-white/30 bg-black/30'}`}>
-                    {selected && <Check className="w-4 h-4 text-white" />}
+            <div className="absolute top-3 right-3 z-10">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg ${selected ? 'bg-[#7B2CBF] scale-110' : 'bg-white/20 backdrop-blur-md'}`}>
+                    {selected && <Check className="w-5 h-5 text-white" />}
                 </div>
             </div>
 
-            <div className="absolute bottom-0 left-0 w-full p-4">
-                <h3 className="font-bold text-white text-lg leading-tight mb-1">{item.title}</h3>
-                <p className="text-xs text-gray-400 leading-snug">{item.desc}</p>
+            <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/80 to-transparent pt-10">
+                <p className="text-white font-medium text-sm md:text-base">{item.title}</p>
             </div>
         </div>
     );
@@ -223,30 +210,29 @@ const CapabilityGroup = ({ category, data, toggle }: any) => {
 };
 
 const CalendarUI = ({ date, time, onDateChange, onTimeChange }: any) => {
-    // A simplified monthly view - in a real app, use date-fns and a grid generator
-    // This is a static representation of "Current Month" for UI demo purposes, similar to the screenshot
     const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
     const daysInMonth = 30; // Simplified
     const startDay = 3; // Wednesday, simplified offset
 
+    // Improved Grid UI
     return (
-        <div className="bg-[#1A1A2E] border border-white/10 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-8">
+        <div className="bg-[#1A1A2E] border border-white/10 rounded-2xl p-6 md:p-8 flex flex-col xl:flex-row gap-8 shadow-2xl overflow-hidden">
             {/* Calendar Grid */}
-            <div className="flex-1">
-                <div className="flex items-center justify-between mb-6">
-                    <span className="font-bold text-xl text-white">{currentMonth}</span>
+            <div className="flex-1 min-w-[300px]">
+                <div className="flex items-center justify-between mb-8">
+                    <span className="font-bold text-2xl text-white tracking-tight">{currentMonth}</span>
                     <div className="flex gap-2">
-                        <button className="p-2 hover:bg-white/10 rounded-full transition-colors"><ChevronDown className="rotate-90 w-4 h-4 text-gray-400" /></button>
-                        <button className="p-2 hover:bg-white/10 rounded-full transition-colors"><ChevronDown className="-rotate-90 w-4 h-4 text-gray-400" /></button>
+                        <button className="p-2 hover:bg-white/10 rounded-full transition-colors"><ChevronDown className="rotate-90 w-5 h-5 text-gray-400" /></button>
+                        <button className="p-2 hover:bg-white/10 rounded-full transition-colors"><ChevronDown className="-rotate-90 w-5 h-5 text-gray-400" /></button>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-7 gap-y-4 mb-2">
+                <div className="grid grid-cols-7 gap-y-4 mb-4">
                     {['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'].map(d => (
-                        <div key={d} className="text-center text-xs font-bold text-gray-500">{d}</div>
+                        <div key={d} className="text-center text-xs font-bold text-gray-500 tracking-widest">{d}</div>
                     ))}
                 </div>
-                <div className="grid grid-cols-7 gap-2">
+                <div className="grid grid-cols-7 gap-1 md:gap-2">
                     {Array.from({ length: startDay }).map((_, i) => <div key={`empty-${i}`} />)}
                     {Array.from({ length: daysInMonth }).map((_, i) => {
                         const d = i + 1;
@@ -255,7 +241,9 @@ const CalendarUI = ({ date, time, onDateChange, onTimeChange }: any) => {
                             <button
                                 key={d}
                                 onClick={() => onDateChange(d)}
-                                className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-medium transition-all ${isSelected ? 'bg-[#7B2CBF] text-white shadow-lg shadow-purple-500/30' : 'text-gray-300 hover:bg-white/10'}`}
+                                className={`aspect-square rounded-full flex items-center justify-center text-sm font-medium transition-all relative
+                                  ${isSelected ? 'bg-[#7B2CBF] text-white shadow-[0_0_15px_rgba(123,44,191,0.6)] scale-110 z-10' : 'text-gray-300 hover:bg-white/10 hover:text-white'}
+                                `}
                             >
                                 {d}
                             </button>
@@ -265,22 +253,24 @@ const CalendarUI = ({ date, time, onDateChange, onTimeChange }: any) => {
             </div>
 
             {/* Time Slots */}
-            <div className="md:w-64 border-t md:border-t-0 md:border-l border-white/10 pt-6 md:pt-0 md:pl-8 flex flex-col">
-                <div className="flex items-center gap-2 mb-6">
-                    <Clock className="w-4 h-4 text-[#7B2CBF]" />
-                    <span className="text-xs font-bold text-[#E0AAFF] uppercase tracking-widest">20 Min Strategy Session</span>
+            <div className="xl:w-72 xl:border-l border-white/10 xl:pl-8 flex flex-col pt-6 xl:pt-0 border-t xl:border-t-0">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-[#7B2CBF]/10 rounded-lg">
+                        <Clock className="w-5 h-5 text-[#7B2CBF]" />
+                    </div>
+                    <span className="text-xs font-bold text-[#E0AAFF] uppercase tracking-widest">20 Min Session</span>
                 </div>
 
-                <div className="space-y-3">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Available Times</label>
+                <div className="space-y-3 overflow-y-auto max-h-[300px] pr-2 custom-scrollbar">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 block">Available Times</label>
                     {TIME_SLOTS.map((slot) => (
                         <button
                             key={slot.label}
                             onClick={() => onTimeChange(slot.label)}
-                            className={`w-full p-3 rounded-xl border flex items-center justify-between transition-all ${time === slot.label ? 'bg-[#7B2CBF]/10 border-[#7B2CBF] text-white' : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10'}`}
+                            className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all group ${time === slot.label ? 'bg-[#7B2CBF] border-[#7B2CBF] text-white shadow-lg' : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:border-white/20'}`}
                         >
                             <span className="font-medium">{slot.label}</span>
-                            <span className="text-xs opacity-60">{slot.sub}</span>
+                            <span className="text-xs opacity-60 group-hover:opacity-100 transition-opacity">{slot.sub}</span>
                         </button>
                     ))}
                 </div>
@@ -379,17 +369,27 @@ export default function PreCallIntelForm() {
     }
 
     const screens = [
-        // 0. Greeting
-        <div className="space-y-8 p-1">
+        // 0. Greeting (Updated Copy & Style)
+        <div key="step0" className="space-y-8 p-1 flex flex-col justify-center min-h-[60vh] text-center items-center">
             <FadeIn delay={0.1}>
-                <span className="text-[#7B2CBF] font-bold tracking-widest uppercase text-xs mb-2 block">Step 0 — Welcome</span>
-                <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">Hello {data.brandName || "Visionary"}</h1>
-                <p className="text-gray-400 text-lg md:text-xl font-light max-w-2xl leading-relaxed">
-                    We're Novembre. A decade of building high-converting digital systems across industries. Before we connect, help us understand you better.
+                {/* Icon wrapper similar to screenshot */}
+                <div className="w-16 h-16 rounded-2xl bg-[#7B2CBF]/10 flex items-center justify-center mx-auto mb-8 border border-[#7B2CBF]/20 shadow-[0_0_30px_rgba(123,44,191,0.15)]">
+                    <Sparkles className="w-8 h-8 text-[#E0AAFF]" />
+                </div>
+
+                <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight tracking-tight">
+                    Let's build your<br />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E0AAFF] to-[#7B2CBF]">
+                        Digital Flagship.
+                    </span>
+                </h1>
+
+                <p className="text-gray-400 text-lg md:text-xl font-light max-w-2xl mx-auto leading-relaxed mb-10">
+                    I need to understand the soul of your café. This brief extracts the strategy, not just the content.
                 </p>
             </FadeIn>
 
-            <FadeIn delay={0.3} className="space-y-6 pt-8 max-w-md">
+            <FadeIn delay={0.3} className="space-y-6 pt-4 w-full max-w-md mx-auto text-left">
                 <InputField
                     label="How should we address you?"
                     placeholder="Your first name"
@@ -403,12 +403,11 @@ export default function PreCallIntelForm() {
                     value={data.brandName}
                     onChange={(e: any) => update("brandName", e.target.value)}
                 />
-                <p className="text-xs text-gray-600 italic">This helps us personalize your strategy.</p>
             </FadeIn>
         </div>,
 
         // 1. Business Stage (Positioning)
-        <div className="space-y-8 p-1">
+        <div key="step1" className="space-y-8 p-1">
             <FadeIn>
                 <span className="text-[#7B2CBF] font-bold tracking-widest uppercase text-xs mb-2 block">Step 1 — Context</span>
                 <h2 className="text-3xl md:text-5xl font-bold text-white mb-2">What stage best describes your business today?</h2>
@@ -440,38 +439,41 @@ export default function PreCallIntelForm() {
             </div>
         </div>,
 
-        // 2. Design Direction
-        <div className="space-y-8 p-1">
+        // 2. Design Direction - (Updated to Image Grid)
+        <div key="step2" className="space-y-8 p-1">
             <FadeIn>
                 <span className="text-[#7B2CBF] font-bold tracking-widest uppercase text-xs mb-2 block">Step 2 — Aesthetics</span>
-                <h2 className="text-3xl md:text-5xl font-bold text-white mb-2">Here are 5 design directions we curated for {data.brandName || "you"}</h2>
-                <p className="text-gray-400 text-lg">Select up to 2 that resonate with your vision.</p>
+                <h2 className="text-3xl md:text-5xl font-bold text-white mb-2">Design Direction</h2>
+                <p className="text-gray-400 text-lg">Select up to 3 that resonate with your vision.</p>
             </FadeIn>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-12">
+            {/* Masonry-like grid for images */}
+            <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6 pb-20">
                 {DESIGN_DIRECTIONS.map((item, i) => (
-                    <FadeIn key={item.id} delay={i * 0.1}>
-                        <VideoCard
+                    <FadeIn key={item.id} delay={i * 0.05} className="break-inside-avoid">
+                        <ImageCard
                             item={item}
                             selected={data.designPreferences.includes(item.id)}
                             onClick={() => {
                                 const current = data.designPreferences;
-                                if (current.includes(item.id)) update("designPreferences", current.filter(id => id !== item.id));
-                                else if (current.length < 2) update("designPreferences", [...current, item.id]);
+                                if (current.includes(item.id)) {
+                                    update("designPreferences", current.filter(id => id !== item.id));
+                                } else if (current.length < 3) {
+                                    update("designPreferences", [...current, item.id]);
+                                }
                             }}
                         />
                     </FadeIn>
                 ))}
             </div>
-            <p className="text-xs text-gray-600 italic">We'll use these as strategic anchors during our call.</p>
         </div>,
 
-        // 3. Stack Alignment (Architecture) - MOVED
-        <div className="space-y-8 p-1">
+        // 3. Stack Alignment (Architecture) - Updated to Multi-select
+        <div key="step3" className="space-y-8 p-1">
             <FadeIn>
                 <span className="text-[#7B2CBF] font-bold tracking-widest uppercase text-xs mb-2 block">Step 3 — Architecture</span>
-                <h2 className="text-3xl md:text-5xl font-bold text-white mb-2">Every digital system we build has layers</h2>
-                <p className="text-gray-400 text-lg">Here's how we structure projects for maximum impact.</p>
+                <h2 className="text-3xl md:text-5xl font-bold text-white mb-2">Stack Alignment</h2>
+                <p className="text-gray-400 text-lg">Select multiple cards here - make the selection delightful.</p>
             </FadeIn>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pb-8">
@@ -482,27 +484,30 @@ export default function PreCallIntelForm() {
                             <div
                                 onClick={() => {
                                     const current = (data.stackAlignment as unknown as string[]);
-                                    // Radio behavior for stack? User prompt implied radio "Radio Options", but code was checkbox. 
-                                    // Prompt says: "Which stack feels aligned... Radio Options".
-                                    // So changing to single select.
-                                    update("stackAlignment", [stack.id]);
+                                    // Toggle logic for multi-select
+                                    const updated = current.includes(stack.id)
+                                        ? current.filter(id => id !== stack.id)
+                                        : [...current, stack.id];
+                                    update("stackAlignment", updated);
                                 }}
-                                className={`p-6 rounded-2xl border h-full flex flex-col cursor-pointer transition-all duration-300 relative overflow-hidden group ${isSelected ? 'border-white/20' : 'border-white/5 hover:border-white/10 bg-white/5'}`}
+                                className={`p-6 rounded-2xl border h-full flex flex-col cursor-pointer transition-all duration-300 relative overflow-hidden group ${isSelected ? 'border-white/20 ring-1 ring-white/10 scale-[1.02]' : 'border-white/5 hover:border-white/10 bg-white/5 hover:bg-white/[0.07]'}`}
                             >
                                 {isSelected && (
-                                    <div className={`absolute inset-0 opacity-20 bg-gradient-to-br ${stack.color}`} />
+                                    <div className={`absolute inset-0 opacity-10 bg-gradient-to-br ${stack.color}`} />
                                 )}
 
-                                <div className={`w-12 h-12 rounded-lg mb-6 flex items-center justify-center bg-gradient-to-br ${stack.color} text-white shadow-lg`}>
-                                    <stack.icon className="w-6 h-6" />
+                                <div className={`w-12 h-12 rounded-lg mb-6 flex items-center justify-center bg-gradient-to-br transition-all duration-500 ${isSelected ? stack.color : 'from-white/5 to-white/10 text-gray-400'} text-white shadow-lg`}>
+                                    <stack.icon className={`w-6 h-6 transition-transform duration-300 ${isSelected ? 'scale-110' : ''}`} />
                                 </div>
 
-                                <h3 className="text-xl font-bold text-white mb-2">{stack.title}</h3>
+                                <h3 className={`text-xl font-bold mb-2 transition-colors ${isSelected ? 'text-white' : 'text-gray-300'}`}>{stack.title}</h3>
                                 <p className="text-sm text-gray-400 leading-relaxed mb-6 flex-grow">{stack.desc}</p>
 
                                 <div className="mt-auto">
-                                    <div className={`w-full py-2 rounded-lg border flex items-center justify-center text-sm font-bold uppercase tracking-wider transition-colors ${isSelected ? 'bg-white text-black border-white' : 'border-white/20 text-gray-500'}`}>
-                                        {isSelected ? 'Selected' : 'Select'}
+                                    <div className={`w-full py-2 rounded-lg border flex items-center justify-center text-sm font-bold uppercase tracking-wider transition-all duration-300 ${isSelected ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.3)]' : 'border-white/20 text-gray-500 group-hover:border-white/40 group-hover:text-gray-300'}`}>
+                                        {isSelected ? (
+                                            <span className="flex items-center gap-2"><Check className="w-4 h-4" /> Selected</span>
+                                        ) : 'Select'}
                                     </div>
                                 </div>
                             </div>
@@ -514,7 +519,7 @@ export default function PreCallIntelForm() {
         </div>,
 
         // 4. Timeline
-        <div className="space-y-8 p-1">
+        <div key="step4" className="space-y-8 p-1">
             <FadeIn>
                 <span className="text-[#7B2CBF] font-bold tracking-widest uppercase text-xs mb-2 block">Step 4 — Timeline</span>
                 <h2 className="text-3xl md:text-5xl font-bold text-white mb-2">When are you looking to launch?</h2>
@@ -538,7 +543,7 @@ export default function PreCallIntelForm() {
         </div>,
 
         // 5. Capabilities - MOVED
-        <div className="space-y-8 p-1">
+        <div key="step5" className="space-y-8 p-1">
             <FadeIn>
                 <span className="text-[#7B2CBF] font-bold tracking-widest uppercase text-xs mb-2 block">Step 5 — Features</span>
                 <h2 className="text-3xl md:text-5xl font-bold text-white mb-2">What capabilities should your system include?</h2>
@@ -560,7 +565,7 @@ export default function PreCallIntelForm() {
         </div>,
 
         // 6. Strategic Intent (Vision)
-        <div className="space-y-8 p-1">
+        <div key="step6" className="space-y-8 p-1">
             <FadeIn>
                 <span className="text-[#7B2CBF] font-bold tracking-widest uppercase text-xs mb-2 block">Step 6 — Vision</span>
                 <h2 className="text-3xl md:text-5xl font-bold text-white mb-2">If this project succeeds, what changes for your business?</h2>
@@ -582,7 +587,7 @@ export default function PreCallIntelForm() {
         </div>,
 
         // 7. Scheduler (The Call)
-        <div className="space-y-8 p-1">
+        <div key="step7" className="space-y-8 p-1">
             <FadeIn>
                 <span className="text-[#7B2CBF] font-bold tracking-widest uppercase text-xs mb-2 block">Step 7 — The Call</span>
                 <h2 className="text-3xl md:text-5xl font-bold text-white mb-2">Let's architect this properly</h2>
