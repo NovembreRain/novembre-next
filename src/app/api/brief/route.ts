@@ -44,45 +44,63 @@ ADVANCED: ${data.capabilities?.advanced?.join(", ") || "-"}
 export async function POST(req: Request) {
     try {
         const body = await req.json();
+        console.log("Brief Submission Payload:", JSON.stringify(body, null, 2));
 
         const {
             email,
             firstName,
             brandName,
             phoneNumber,
-            preferredDate, // Day number (e.g., 1-31)
-            preferredTime, // string (e.g., "Morning")
+            preferredDate, // Expected: number (1-31)
+            preferredTime, // Expected: string
             ...restOfData
         } = body;
 
         // 1. Construct scheduled_at
-        // Current logic assumes specific time slots roughly map to hours for a valid timestamp
-        // For now, we'll create a Date object for the NEXT occurrence of that day number
         const now = new Date();
-        let targetYear = now.getFullYear();
-        let targetMonth = now.getMonth();
+        let scheduledAt: Date;
 
-        // If the day is in the past for this month, move to next month
-        if (preferredDate < now.getDate()) {
-            targetMonth++;
-            if (targetMonth > 11) {
-                targetMonth = 0;
-                targetYear++;
+        if (!preferredDate) {
+            console.warn("No preferredDate provided, defaulting to 24h from now.");
+            scheduledAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        } else {
+            let targetYear = now.getFullYear();
+            let targetMonth = now.getMonth();
+
+            // Validate preferredDate is a number
+            const day = parseInt(String(preferredDate), 10);
+            if (isNaN(day)) {
+                throw new Error(`Invalid preferredDate: ${preferredDate}`);
             }
+
+            // If the day is in the past for this month, move to next month
+            if (day < now.getDate()) {
+                targetMonth++;
+                if (targetMonth > 11) {
+                    targetMonth = 0;
+                    targetYear++;
+                }
+            }
+
+            // Set specific hour
+            let hour = 9; // Default Morning
+            if (preferredTime === "Afternoon") hour = 13;
+            if (preferredTime === "Evening") hour = 16;
+
+            scheduledAt = new Date(targetYear, targetMonth, day, hour, 0, 0);
         }
 
-        // Set specific hour based on slot (Approximate for sorting)
-        let hour = 9; // Default Morning
-        if (preferredTime === "Afternoon") hour = 13;
-        if (preferredTime === "Evening") hour = 16;
+        // Validate Date validity
+        if (isNaN(scheduledAt.getTime())) {
+            throw new Error("Failed to construct a valid scheduled_at date.");
+        }
 
-        const scheduledAt = new Date(targetYear, targetMonth, preferredDate, hour, 0, 0);
+        console.log("Constructed scheduled_at:", scheduledAt.toISOString());
 
         // 2. Prepare Notes
         const notes = formatBriefToNotes(body);
 
         // 3. Insert into Supabase 'appointments'
-        // status defaults to 'pending' as per schema
         const { data: appointment, error: dbError } = await supabase
             .from("appointments")
             .insert([
@@ -91,21 +109,17 @@ export async function POST(req: Request) {
                     client_email: email,
                     scheduled_at: scheduledAt.toISOString(),
                     notes: notes,
-                    // We don't have a user_id yet if they are not logged in, schema allows null?
-                    // Schema: user_id uuid references auth.users
-                    // If not nullable, this will fail. Assuming nullable based on common patterns for public forms.
-                    // If it fails, we might need a service user or check if user exists.
                 }
             ])
             .select()
             .single();
 
         if (dbError) {
-            console.error("Supabase Error:", dbError);
-            return NextResponse.json({ error: "Failed to save appointment" }, { status: 500 });
+            console.error("Supabase Insert Error:", dbError);
+            return NextResponse.json({ error: dbError.message || "Database Error" }, { status: 500 });
         }
 
-        // 4. Prepare Emails (Keep existing logic, just cleaner)
+        // 4. Prepare Emails
         const msgToOwner = {
             to: process.env.NOTIFY_EMAIL!,
             from: process.env.SENDGRID_FROM!,
@@ -117,19 +131,27 @@ export async function POST(req: Request) {
             to: email,
             from: process.env.SENDGRID_FROM!,
             subject: `We've received your brief for ${brandName}`,
-            text: `Hi ${firstName},\n\nThank you for sharing your vision for ${brandName}.\n\nI have received your brief and I'm currently reviewing the details to prepare for our strategy session.\n\nYou will receive a calendar invitation for your requested slot (${scheduledAt.toLocaleDateString()} - ${preferredTime}) within 24 hours.\n\nBest,\nThe Team`,
+            text: `Hi ${firstName},\n\nThank you for sharing your vision for ${brandName}.\n\nI have received your brief and I'm currently reviewing the details to prepare for our strategy session.\n\nYou will receive a calendar invitation for your requested slot (${scheduledAt.toLocaleDateString()} - ${preferredTime || "Flexible"}) within 24 hours.\n\nBest,\nThe Team`,
         };
 
         // 5. Send Emails
-        await Promise.all([
-            sgMail.send(msgToOwner),
-            sgMail.send(msgToClient)
-        ]);
+        try {
+            await Promise.all([
+                sgMail.send(msgToOwner),
+                sgMail.send(msgToClient)
+            ]);
+        } catch (emailError) {
+            console.error("SendGrid Error (Non-fatal):", emailError);
+            // Continue even if email fails, as DB save was successful
+        }
 
         return NextResponse.json({ success: true, id: appointment.id });
 
-    } catch (error) {
-        console.error("API Error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    } catch (error: any) {
+        console.error("API Critical Error:", error);
+        return NextResponse.json({
+            error: error.message || "Internal Server Error",
+            stack: error.stack
+        }, { status: 500 });
     }
 }
