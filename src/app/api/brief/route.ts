@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import sgMail from "@sendgrid/mail";
@@ -20,143 +19,111 @@ export async function POST(req: Request) {
             firstName,
             brandName,
             phoneNumber,
-            businessStage,
-            designPreferences,
-            capabilities,
-            launchTimeline,
-            stackAlignment,
-            successVision,
-            preferredDate,
-            preferredTime,
-            timezone,
+            // Destructure specific fields to explicitly handle them,
+            // but we'll put everything else into brief_data too
             ...restOfData
         } = body;
 
-        // Calculate Intelligence Scores
-        const urgencyScore = launchTimeline === "urgent" ? 10 :
-            launchTimeline === "30_days" ? 7 :
-                launchTimeline === "1_2_months" ? 5 : 2;
-
-        // Count total selected capabilities
-        const complexityScore = Object.values(capabilities || {}).flat().length;
-
-        const budgetSignal = (Array.isArray(stackAlignment) && stackAlignment.includes("full_stack")) ? "high" :
-                        (Array.isArray(stackAlignment) && stackAlignment.includes("growth_focused")) ? "medium-high" :
-                        (Array.isArray(stackAlignment) && stackAlignment.length > 1) ? "medium" : "low";
-
-        // Insert with enhanced metadata
-        // We map 'brandName' to 'contact_name' basically, or we can just rely on brief_data for specifics.
-        // The previous implementation mapped contact_name to cafeName. 
-        // Here we'll map contact_name to firstName + brandName.
-
+        // 1. Insert into Supabase
         const { data: project, error: dbError } = await supabase
             .from("projects")
-            .insert([{
-                contact_email: email || "unknown@example.com", // Fallback if missing
-                contact_name: firstName || brandName || "Visionary",
-                contact_phone: phoneNumber,
-                project_type: "web_system",
-                brief_data: {
-                    // Core Intelligence
-                    brandName,
-                    businessStage,
-                    designPreferences,
-                    capabilities,
-                    launchTimeline,
-                    stackAlignment,
-                    successVision,
-
-                    // Scores
-                    urgencyScore,
-                    complexityScore,
-                    budgetSignal,
-
-                    // Call Info
-                    preferredDate,
-                    preferredTime,
-                    timezone,
-
-                    ...restOfData
-                },
-                // Call Scheduling columns if they exist in DB, otherwise they are in brief_data
-                // previous code used call_scheduled_date, call_scheduled_time, call_timezone.
-                // We will assume these columns exit.
-                call_scheduled_date: preferredDate,
-                call_scheduled_time: preferredTime,
-                call_timezone: timezone,
-                status: "pre_call_complete"
-            }])
+            .insert([
+                {
+                    contact_email: email,
+                    contact_name: `${firstName} (${brandName})`,
+                    contact_phone: phoneNumber,
+                    project_type: "premium_brief",
+                    brief_data: {
+                        firstName,
+                        brandName,
+                        phoneNumber,
+                        email,
+                        ...restOfData
+                    }
+                }
+            ])
             .select()
             .single();
 
         if (dbError) {
             console.error("Supabase Error:", dbError);
-            // Fallback: try inserting without specific call columns if that was the error, 
-            // but for now we throw.
-            throw dbError;
+            return NextResponse.json({ error: "Failed to save project" }, { status: 500 });
         }
 
-        // Enhanced Email to Owner
+        // 2. Prepare Emails
+        // Email to YOU (The Agency Owner)
         const msgToOwner = {
             to: process.env.NOTIFY_EMAIL!,
             from: process.env.SENDGRID_FROM!,
-            subject: `🎯 Pre-Call Intel: ${brandName} [${budgetSignal.toUpperCase()}]`,
-            html: `
-        <h2>Pre-Strategy Call Intelligence Report</h2>
-        
-        <h3>🎯 Quick Assessment</h3>
-        <ul>
-          <li><strong>Business Stage:</strong> ${businessStage}</li>
-          <li><strong>Budget Signal:</strong> ${budgetSignal}</li>
-          <li><strong>Urgency:</strong> ${launchTimeline} (Score: ${urgencyScore}/10)</li>
-          <li><strong>Complexity:</strong> ${complexityScore} capabilities selected</li>
-        </ul>
-        
-        <h3>💡 Strategic Intent</h3>
-        <p><em>"${successVision}"</em></p>
-        
-        <h3>🎨 Design Direction</h3>
-        <p>${(designPreferences || []).join(", ")}</p>
-        
-        <h3>📞 Call Scheduled</h3>
-        <p>${preferredDate} at ${preferredTime} ${timezone}</p>
-        
-        <p><strong>Contact:</strong> ${firstName} (${email}, ${phoneNumber})</p>
-      `
+            subject: `🚀 New Lead: ${brandName} (${restOfData.businessStage || "Unknown Stage"})`,
+            text: `
+New Premium Brief Received!
+
+CONTACT
+-------
+Name: ${firstName}
+Brand: ${brandName}
+Email: ${email}
+Phone: ${phoneNumber || "N/A"}
+Timezone: ${restOfData.timezone || "N/A"}
+
+POSITIONING
+-----------
+Stage: ${restOfData.businessStage || "N/A"}
+Timeline: ${restOfData.launchTimeline || "N/A"}
+
+STRATEGY
+--------
+Vision: ${restOfData.successVision || "N/A"}
+Stack: ${Array.isArray(restOfData.stackAlignment) ? restOfData.stackAlignment.join(", ") : "N/A"}
+
+DESIGN DIRECTION
+----------------
+Preferences: ${Array.isArray(restOfData.designPreferences) ? restOfData.designPreferences.join(", ") : "N/A"}
+
+CAPABILITIES
+------------
+Foundation: ${restOfData.capabilities?.foundation?.join(", ") || "-"}
+Commerce: ${restOfData.capabilities?.commerce?.join(", ") || "-"}
+Automation: ${restOfData.capabilities?.automation?.join(", ") || "-"}
+Authority: ${restOfData.capabilities?.authority?.join(", ") || "-"}
+Advanced: ${restOfData.capabilities?.advanced?.join(", ") || "-"}
+
+MEETING REQUEST
+---------------
+Date: ${restOfData.preferredDate || "Not selected"}
+Time: ${restOfData.preferredTime || "Not selected"}
+
+Log in to dashboard for full details.
+`,
         };
 
-        // Client Confirmation
-        const stacksSelected = Array.isArray(stackAlignment) ? stackAlignment.join(", ") : stackAlignment;
+        // Email to CLIENT (Automated Receipt)
         const msgToClient = {
             to: email,
             from: process.env.SENDGRID_FROM!,
-            subject: `Your strategy session with Novembre is confirmed`,
-            html: `
-        <p>Hi ${firstName},</p>
-        <p>Thank you for completing the pre-call brief for ${brandName}.</p>
-        <p><strong>Your strategy session is scheduled for:</strong><br/>
-        ${preferredDate} at ${preferredTime} ${timezone}</p>
-        <p>I've reviewed your goals and the framework (${stacksSelected}) you selected. 
-        I'll come prepared with a tailored strategy.</p>
-        <p>See you soon,<br/>Raj | Novembre</p>
-      `
+            subject: `We've received your brief for ${brandName}`,
+            text: `
+Hi ${firstName},
+
+Thank you for sharing your vision for ${brandName}. 
+
+I have received your brief and I'm currently reviewing the details to prepare for our strategy session.
+
+You will receive a calendar invitation for your requested slot (${restOfData.preferredDate || "date"} - ${restOfData.preferredTime || "time"}) within 24 hours.
+
+Best,
+Raj | Novembre
+`,
         };
 
-        // NOTE: Emails are commented out for now as requested.
-        /*
+        // 3. Send Emails in Parallel
         await Promise.all([
-          sgMail.send(msgToOwner),
-          sgMail.send(msgToClient)
+            sgMail.send(msgToOwner),
+            sgMail.send(msgToClient)
         ]);
-        */
 
-        console.log("Brief submitted successfully. ID:", project.id);
-
-        return NextResponse.json({
-            success: true,
-            id: project.id,
-            message: "Pre-call intelligence captured successfully"
-        });
+        return NextResponse.json({ success: true, id: project.id });
 
     } catch (error) {
         console.error("API Error:", error);
