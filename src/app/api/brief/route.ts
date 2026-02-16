@@ -40,8 +40,8 @@ export async function POST(req: Request) {
     try {
         // 1. Initialize Services (Lazy load to prevent build errors)
         const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE!
+            process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
+            process.env.SUPABASE_SERVICE_ROLE || ""
         );
         sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 
