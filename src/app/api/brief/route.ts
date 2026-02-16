@@ -2,13 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import sgMail from "@sendgrid/mail";
 
-// 1. Initialize Services
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE!
-);
+// Services initialized inside handler to avoid build-time errors
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 
 // --- HELPER: Format Brief Data for Notes ---
 const formatBriefToNotes = (data: any) => {
@@ -43,6 +38,13 @@ ADVANCED: ${data.capabilities?.advanced?.join(", ") || "-"}
 
 export async function POST(req: Request) {
     try {
+        // 1. Initialize Services (Lazy load to prevent build errors)
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE!
+        );
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+
         const body = await req.json();
         console.log("Brief Submission Payload:", JSON.stringify(body, null, 2));
 
