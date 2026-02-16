@@ -7,9 +7,10 @@ import {
     ArrowRight, Check, ChevronDown, Calendar, Clock, Lock,
     Leaf, TrendingUp, Zap, Crown, Building2, Play, Pause,
     Globe, LayoutTemplate, MessageSquare, CreditCard, Bot,
-    FileText, Search, Wrench, ShieldCheck, Mail, Loader2, Sparkles, Phone, Monitor
+    FileText, Search, Wrench, ShieldCheck, Mail, Loader2, Sparkles, Phone, Monitor, Heart, Star
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 // --- TYPES & DATA ---
 
@@ -60,12 +61,15 @@ const STAGES = [
     { id: "complex", label: "Complex Systems", desc: "Agency / Multi-location / Enterprise needs", icon: Building2 },
 ];
 
+// UPDATED: Use public images for Aesthetics
 const DESIGN_DIRECTIONS = [
-    { id: "bold_immersive", title: "Bold & Immersive", desc: "High-impact visuals with narrative depth", video: "/videos/bold-preview.mp4" },
-    { id: "minimal_elegant", title: "Minimal & Elegant", desc: "Clean lines, sophisticated typography", video: "/videos/minimal-preview.mp4" },
-    { id: "playful_dynamic", title: "Playful & Dynamic", desc: "Bright colors, motion, and interaction", video: "/videos/playful-preview.mp4" },
-    { id: "tech_futuristic", title: "Tech & Futuristic", desc: "Dark mode, neon accents, grid layouts", video: "/videos/tech-preview.mp4" },
-    { id: "editorial_luxury", title: "Editorial Luxury", desc: "High-fashion magazine layout style", video: "/videos/editorial-preview.mp4" },
+    { id: "1", src: "/1.png", alt: "Minimalist Dark" },
+    { id: "2", src: "/2.png", alt: "Vibrant Gradient" },
+    { id: "3", src: "/3.png", alt: "Clean Corporate" },
+    { id: "4", src: "/4.png", alt: "Editorial Layout" },
+    { id: "5", src: "/5.png", alt: "Tech Futuristic" },
+    { id: "6", src: "/6.png", alt: "Warm & Earthy" },
+    { id: "7", src: "/7.png", alt: "Bold Typography" },
 ];
 
 const STACKS = [
@@ -137,53 +141,36 @@ const FadeIn = ({ children, delay = 0, className = "" }: any) => (
 );
 
 const InputField = ({ label, ...props }: any) => (
-    <div className="w-full">
-        <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 ml-1">{label}</label>
+    <div className="w-full relative group">
+        <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 ml-1 group-focus-within:text-[#7B2CBF] transition-colors duration-300">{label}</label>
         <input
-            className="w-full bg-white/5 border-b border-white/10 py-4 px-4 text-xl text-white placeholder:text-white/20 focus:outline-none focus:border-[#7B2CBF] focus:bg-white/10 transition-all font-light rounded-t-lg"
+            className="w-full bg-white/5 border-b border-white/10 py-5 px-4 text-2xl text-white placeholder:text-white/20 focus:outline-none focus:border-[#7B2CBF] focus:bg-white/10 transition-all font-medium rounded-t-lg"
             {...props}
         />
+        <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-[#7B2CBF] to-transparent scale-x-0 group-focus-within:scale-x-100 transition-transform duration-500 origin-left" />
     </div>
 );
 
-const VideoCard = ({ item, selected, onClick }: any) => {
-    const videoRef = useRef<HTMLVideoElement>(null);
-
+const ImageTile = ({ item, selected, onClick }: any) => {
     return (
         <div
             onClick={onClick}
-            onMouseEnter={() => videoRef.current?.play()}
-            onMouseLeave={() => { videoRef.current?.pause(); if (videoRef.current) videoRef.current.currentTime = 0; }}
-            className={`relative rounded-xl overflow-hidden cursor-pointer aspect-[4/5] group border transition-all duration-300 ${selected ? 'border-[#7B2CBF] ring-2 ring-[#7B2CBF]/30 scale-[1.02]' : 'border-white/10 hover:border-white/30'}`}
+            className={`relative rounded-xl overflow-hidden cursor-pointer group break-inside-avoid mb-4 transition-all duration-300 ${selected ? 'ring-4 ring-[#7B2CBF] scale-[1.02] shadow-[0_0_30px_rgba(123,44,191,0.4)]' : 'hover:ring-2 hover:ring-white/30 hover:shadow-xl'}`}
         >
-            <div className="absolute inset-0 bg-[#151525]">
-                <div className="w-full h-full bg-gradient-to-br from-white/5 to-white/0 flex items-center justify-center">
-                    <Play className={`w-12 h-12 text-white/10 ${selected ? 'text-[#7B2CBF]' : ''}`} />
-                </div>
-                {/* 
-                  NOTE: Ensure these video paths exist in public/videos or use placeholders.
-                  If not, this will just show the poster/placeholder.
-                */}
-                <video
-                    ref={videoRef}
-                    src={item.video}
-                    loop
-                    muted
-                    playsInline
-                    className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity"
+            <div className="relative">
+                <Image
+                    src={item.src}
+                    alt={item.alt}
+                    width={400}
+                    height={300}
+                    className={`w-full h-auto object-cover transition-transform duration-700 ${selected ? 'scale-105 saturate-100' : 'group-hover:scale-110 saturate-0 group-hover:saturate-50'}`}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-            </div>
+                <div className={`absolute inset-0 bg-[#7B2CBF]/20 mix-blend-overlay transition-opacity duration-300 ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
 
-            <div className="absolute top-3 right-3">
-                <div className={`w-6 h-6 rounded-full border flex items-center justify-center transition-colors ${selected ? 'bg-[#7B2CBF] border-[#7B2CBF]' : 'border-white/30 bg-black/30'}`}>
-                    {selected && <Check className="w-4 h-4 text-white" />}
+                {/* Selection Indicator */}
+                <div className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all ${selected ? 'bg-[#7B2CBF] text-white scale-100 shadow-lg' : 'bg-black/40 text-transparent border border-white/30 scale-90 opacity-0 group-hover:opacity-100'}`}>
+                    <Check className="w-5 h-5" />
                 </div>
-            </div>
-
-            <div className="absolute bottom-0 left-0 w-full p-4">
-                <h3 className="font-bold text-white text-lg leading-tight mb-1">{item.title}</h3>
-                <p className="text-xs text-gray-400 leading-snug">{item.desc}</p>
             </div>
         </div>
     );
@@ -223,8 +210,6 @@ const CapabilityGroup = ({ category, data, toggle }: any) => {
 };
 
 const CalendarUI = ({ date, time, onDateChange, onTimeChange }: any) => {
-    // A simplified monthly view - in a real app, use date-fns and a grid generator
-    // This is a static representation of "Current Month" for UI demo purposes, similar to the screenshot
     const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
     const daysInMonth = 30; // Simplified
     const startDay = 3; // Wednesday, simplified offset
@@ -329,10 +314,7 @@ export default function PreCallIntelForm() {
 
             if (!res.ok) throw new Error("Submission Failed");
 
-            // Show success screen
             setSubmitted(true);
-
-            // Redirect after 4 seconds
             setTimeout(() => {
                 router.push("/");
             }, 4000);
@@ -349,7 +331,6 @@ export default function PreCallIntelForm() {
         return (
             <div className="min-h-screen bg-[#0D0D1A] flex items-center justify-center p-6 relative overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#7B2CBF]/20 via-[#0D0D1A] to-[#0D0D1A]" />
-
                 <motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -364,12 +345,10 @@ export default function PreCallIntelForm() {
                             <Check className="w-10 h-10 text-white" />
                         </motion.div>
                     </div>
-
                     <h2 className="text-3xl font-bold text-white mb-4">You're all set, {data.firstName}!</h2>
                     <p className="text-gray-300 mb-8 leading-relaxed">
                         We've received your brief. Our team is already reviewing your vision and will confirm your strategy session within <span className="text-[#E0AAFF] font-bold">24 hours</span>.
                     </p>
-
                     <div className="flex items-center justify-center gap-2 text-sm text-gray-500 uppercase tracking-widest">
                         <Loader2 className="w-4 h-4 animate-spin" /> Redirecting home...
                     </div>
@@ -379,17 +358,28 @@ export default function PreCallIntelForm() {
     }
 
     const screens = [
-        // 0. Greeting
-        <div className="space-y-8 p-1">
-            <FadeIn delay={0.1}>
-                <span className="text-[#7B2CBF] font-bold tracking-widest uppercase text-xs mb-2 block">Step 0 — Welcome</span>
-                <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">Hello {data.brandName || "Visionary"}</h1>
-                <p className="text-gray-400 text-lg md:text-xl font-light max-w-2xl leading-relaxed">
-                    We're Novembre. A decade of building high-converting digital systems across industries. Before we connect, help us understand you better.
+        // 0. Greeting - UPDATED AESTHETIC
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+            <FadeIn delay={0.1} className="max-w-4xl mx-auto">
+                <div className="mb-8 flex justify-center">
+                    <div className="w-16 h-16 rounded-full bg-[#7B2CBF]/10 flex items-center justify-center border border-[#7B2CBF]/30 animate-pulse">
+                        <Sparkles className="w-8 h-8 text-[#7B2CBF]" />
+                    </div>
+                </div>
+
+                <h1 className="text-6xl md:text-8xl font-black tracking-tight leading-[1.1] mb-8 text-white">
+                    Hello <br className="hidden md:block" />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E0AAFF] via-[#7B2CBF] to-[#E0AAFF] animate-gradient-x">
+                        {data.brandName || "Visionary"}
+                    </span>
+                </h1>
+
+                <p className="text-gray-400 text-lg md:text-2xl font-light max-w-2xl mx-auto leading-relaxed mb-12">
+                    I need to understand the soul of your business. This brief extracts the strategy, not just the content.
                 </p>
             </FadeIn>
 
-            <FadeIn delay={0.3} className="space-y-6 pt-8 max-w-md">
+            <FadeIn delay={0.3} className="space-y-6 w-full max-w-md mx-auto bg-white/5 p-8 rounded-3xl border border-white/10 backdrop-blur-sm">
                 <InputField
                     label="How should we address you?"
                     placeholder="Your first name"
@@ -403,7 +393,6 @@ export default function PreCallIntelForm() {
                     value={data.brandName}
                     onChange={(e: any) => update("brandName", e.target.value)}
                 />
-                <p className="text-xs text-gray-600 italic">This helps us personalize your strategy.</p>
             </FadeIn>
         </div>,
 
@@ -440,69 +429,82 @@ export default function PreCallIntelForm() {
             </div>
         </div>,
 
-        // 2. Design Direction
-        <div className="space-y-8 p-1">
+        // 2. Design Direction - UPDATED: MOSAIC + PUBLIC IMAGES
+        <div className="space-y-8 p-1 h-full flex flex-col">
             <FadeIn>
                 <span className="text-[#7B2CBF] font-bold tracking-widest uppercase text-xs mb-2 block">Step 2 — Aesthetics</span>
-                <h2 className="text-3xl md:text-5xl font-bold text-white mb-2">Here are 5 design directions we curated for {data.brandName || "you"}</h2>
-                <p className="text-gray-400 text-lg">Select up to 2 that resonate with your vision.</p>
+                <h2 className="text-3xl md:text-5xl font-bold text-white mb-2">Curating your visual language</h2>
+                <p className="text-gray-400 text-lg">Select up to 3 styles that resonate with your vision. | Keep several screenshots of your best references. </p>
             </FadeIn>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-12">
+            <div className="columns-1 md:columns-2 lg:columns-3 gap-4 pb-12 space-y-4">
                 {DESIGN_DIRECTIONS.map((item, i) => (
                     <FadeIn key={item.id} delay={i * 0.1}>
-                        <VideoCard
+                        <ImageTile
                             item={item}
                             selected={data.designPreferences.includes(item.id)}
                             onClick={() => {
                                 const current = data.designPreferences;
-                                if (current.includes(item.id)) update("designPreferences", current.filter(id => id !== item.id));
-                                else if (current.length < 2) update("designPreferences", [...current, item.id]);
+                                if (current.includes(item.id)) {
+                                    update("designPreferences", current.filter(id => id !== item.id));
+                                } else if (current.length < 3) {
+                                    update("designPreferences", [...current, item.id]);
+                                }
                             }}
                         />
                     </FadeIn>
                 ))}
             </div>
-            <p className="text-xs text-gray-600 italic">We'll use these as strategic anchors during our call.</p>
         </div>,
 
-        // 3. Stack Alignment (Architecture) - MOVED
+        // 3. Stack Alignment (Architecture) - UPDATED: MULTI-SELECT + DELIGHTFUL
         <div className="space-y-8 p-1">
             <FadeIn>
                 <span className="text-[#7B2CBF] font-bold tracking-widest uppercase text-xs mb-2 block">Step 3 — Architecture</span>
-                <h2 className="text-3xl md:text-5xl font-bold text-white mb-2">Every digital system we build has layers</h2>
-                <p className="text-gray-400 text-lg">Here's how we structure projects for maximum impact.</p>
+                <h2 className="text-3xl md:text-5xl font-bold text-white mb-2">Building Blocks</h2>
+                <p className="text-gray-400 text-lg">Select the core components you anticipate needing.</p>
             </FadeIn>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pb-8">
                 {STACKS.map((stack, i) => {
-                    const isSelected = (data.stackAlignment as any).includes(stack.id);
+                    const isSelected = (data.stackAlignment as string[]).includes(stack.id);
                     return (
                         <FadeIn key={stack.id} delay={i * 0.1} className="h-full">
                             <div
                                 onClick={() => {
-                                    const current = (data.stackAlignment as unknown as string[]);
-                                    // Radio behavior for stack? User prompt implied radio "Radio Options", but code was checkbox. 
-                                    // Prompt says: "Which stack feels aligned... Radio Options".
-                                    // So changing to single select.
-                                    update("stackAlignment", [stack.id]);
+                                    const current = (data.stackAlignment as string[]);
+                                    const updated = current.includes(stack.id)
+                                        ? current.filter(id => id !== stack.id)
+                                        : [...current, stack.id];
+                                    update("stackAlignment", updated);
                                 }}
-                                className={`p-6 rounded-2xl border h-full flex flex-col cursor-pointer transition-all duration-300 relative overflow-hidden group ${isSelected ? 'border-white/20' : 'border-white/5 hover:border-white/10 bg-white/5'}`}
+                                className={`p-6 rounded-2xl border h-full flex flex-col cursor-pointer transition-all duration-500 relative overflow-hidden group 
+                                    ${isSelected
+                                        ? 'border-transparent shadow-[0_0_40px_rgba(123,44,191,0.3)] transform scale-[1.03] z-10'
+                                        : 'border-white/5 hover:border-white/20 bg-white/5 hover:bg-white/10'
+                                    }`}
                             >
                                 {isSelected && (
-                                    <div className={`absolute inset-0 opacity-20 bg-gradient-to-br ${stack.color}`} />
+                                    <>
+                                        <div className={`absolute inset-0 bg-gradient-to-br ${stack.color} opacity-10`} />
+                                        <div className="absolute inset-0 border-2 border-[#7B2CBF]/50 rounded-2xl animate-pulse" />
+                                    </>
                                 )}
 
-                                <div className={`w-12 h-12 rounded-lg mb-6 flex items-center justify-center bg-gradient-to-br ${stack.color} text-white shadow-lg`}>
-                                    <stack.icon className="w-6 h-6" />
+                                <div className={`w-14 h-14 rounded-xl mb-6 flex items-center justify-center transition-all duration-300
+                                    ${isSelected ? `bg-gradient-to-br ${stack.color} text-white shadow-lg` : 'bg-white/10 text-gray-400'}`}>
+                                    <stack.icon className="w-7 h-7" />
                                 </div>
 
-                                <h3 className="text-xl font-bold text-white mb-2">{stack.title}</h3>
+                                <h3 className={`text-xl font-bold mb-2 transition-colors ${isSelected ? 'text-white' : 'text-gray-300'}`}>{stack.title}</h3>
                                 <p className="text-sm text-gray-400 leading-relaxed mb-6 flex-grow">{stack.desc}</p>
 
-                                <div className="mt-auto">
-                                    <div className={`w-full py-2 rounded-lg border flex items-center justify-center text-sm font-bold uppercase tracking-wider transition-colors ${isSelected ? 'bg-white text-black border-white' : 'border-white/20 text-gray-500'}`}>
-                                        {isSelected ? 'Selected' : 'Select'}
+                                <div className="mt-auto flex items-center justify-between">
+                                    <div className={`text-xs font-bold uppercase tracking-wider transition-colors ${isSelected ? 'text-[#7B2CBF]' : 'text-gray-600'}`}>
+                                        {isSelected ? 'Selected' : 'Add to Stack'}
+                                    </div>
+                                    <div className={`w-6 h-6 rounded-full border flex items-center justify-center transition-all ${isSelected ? 'bg-[#7B2CBF] border-[#7B2CBF]' : 'border-gray-600'}`}>
+                                        {isSelected && <Check className="w-3 h-3 text-white" />}
                                     </div>
                                 </div>
                             </div>
@@ -510,7 +512,7 @@ export default function PreCallIntelForm() {
                     )
                 })}
             </div>
-            <p className="text-xs text-gray-600 italic">We'll discuss specific pricing during our strategy call.</p>
+            <p className="text-xs text-gray-600 italic">We'll verify compatibility during our strategy call.</p>
         </div>,
 
         // 4. Timeline
